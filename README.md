@@ -36,14 +36,22 @@ python scripts/smoke_test_env.py --env-id PushCube-v0
 
 ```bash
 python scripts/train_pick.py --config configs/train_pick.yaml
-python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/train_pick.yaml
-python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/train_pick.yaml --render
-python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/train_pick.yaml --record --record-dir videos
-python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/train_pick.yaml --inline
+python scripts/eval_pick.py --ckpt checkpoints/latest.zip --config configs/train_pick.yaml
+python scripts/eval_pick.py --ckpt checkpoints/latest.zip --config configs/train_pick.yaml --render
+python scripts/eval_pick.py --ckpt checkpoints/latest.zip --config configs/train_pick.yaml --record --record-dir videos
+python scripts/eval_pick.py --ckpt checkpoints/latest.zip --config configs/train_pick.yaml --inline
+
+# TD-MPC (state-only)
+python scripts/train_tdmpc.py --config configs/train_tdmpc.yaml
+python scripts/eval_tdmpc.py --ckpt checkpoints/tdmpc_latest.pt --config configs/train_tdmpc.yaml
+python scripts/eval_tdmpc.py --ckpt checkpoints/tdmpc_latest.pt --config configs/train_tdmpc.yaml --render
+python scripts/eval_tdmpc.py --ckpt checkpoints/tdmpc_latest.pt --config configs/train_tdmpc.yaml --record --record-dir videos
 ```
 
 注意：
-- `scripts/train_pick.py` 目前是隨機策略的最小流程，之後需替換成 TD-MPC 整合。
+- `scripts/train_pick.py` 目前使用 Stable-Baselines3 的 SAC 作為 baseline。
+- `scripts/train_tdmpc.py` 預設用 state-only observation，若要影像觀測請在 `configs/algo/tdmpc.yaml` 設定 `image_keys`。
+- 影像觀測會顯著增加算力需求與訓練時間，建議先用 state-only 確認流程。
 - 在 Colab/無頭環境建議設定 `MUJOCO_GL=egl` 以使用 GPU 渲染。
 - 若出現 Mesa shader cache 權限錯誤，請設定 `XDG_CACHE_HOME` 到可寫目錄。
 - 若安裝時遇到 pip constraint 衝突，請用 `PIP_CONSTRAINT=` 清空限制。
@@ -54,7 +62,8 @@ python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/trai
 
 | 類型 | 名稱 | 設定檔 | 說明 |
 | --- | --- | --- | --- |
-| algo | tdmpc | configs/algo/tdmpc.yaml | TD-MPC placeholder 設定 |
+| algo | sac | configs/algo/sac.yaml | Stable-Baselines3 SAC 設定 |
+| algo | tdmpc | configs/algo/tdmpc.yaml | TD-MPC (state-only) 設定 |
 | env | lowcostrobot_pick | configs/env/lowcostrobot_pick.yaml | Low-cost robot pick 環境設定 |
 
 `configs/train_pick.yaml`
@@ -75,13 +84,23 @@ python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/trai
 - `termination.*`: 終止條件（placeholder）
 - `randomization.*`: domain randomization 設定
 
+`configs/algo/sac.yaml`
+- `name`: 演算法名稱
+- `policy`: SB3 policy 類型
+- `device`: 計算裝置（auto/cpu/cuda）
+- `learning_rate`, `buffer_size`, `batch_size`, `gamma`, `tau`: SAC 主要超參數
+- `train_freq`, `gradient_steps`, `learning_starts`: 訓練頻率與 warmup
+- `ent_coef`, `target_entropy`: 自動 entropy 設定
+
 `configs/algo/tdmpc.yaml`
-- `name`: 演算法名稱（placeholder）
-- `obs_dim`, `action_dim`: 觀測/動作維度（placeholder）
-- `hidden_dim`: 模型隱層大小（placeholder）
-- `batch_size`: 訓練 batch 大小（placeholder）
-- `lr`: 學習率（placeholder）
-- `horizon`: TD-MPC 規劃步數（placeholder）
+- `state_keys`: TD-MPC 使用的 state observation keys
+- `image_keys`: 啟用影像觀測時要使用的 image keys（例如 `image_front`, `image_top`）
+- `latent_dim`, `hidden_dim`: encoder / model 隱層
+- `state_embed_dim`, `image_embed_dim`: state / image encoder embedding 維度
+- `batch_size`, `lr`, `gamma`, `tau`: 主要超參數
+- `replay_size`, `start_steps`, `train_freq`, `gradient_steps`: replay 與更新頻率
+- `policy_bc_weight`: policy 行為複製權重（用 planner 動作監督）
+- `cem_*`, `horizon`, `action_noise`: CEM 規劃設定
 
 ## Repo 結構
 
@@ -89,7 +108,9 @@ python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/trai
 configs/
   env/lowcostrobot_pick.yaml
   algo/tdmpc.yaml
+  algo/sac.yaml
   train_pick.yaml
+  train_tdmpc.yaml
 envs/
   lowcostrobot_pick/
     __init__.py
@@ -100,6 +121,9 @@ scripts/
   smoke_test_env.py
   train_pick.py
   eval_pick.py
+  train_tdmpc.py
+  eval_tdmpc.py
+  tdmpc_agent.py
   utils_seed.py
   utils_logging.py
 logs/

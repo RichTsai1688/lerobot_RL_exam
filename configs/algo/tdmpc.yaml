@@ -1,8 +1,29 @@
-# Placeholder TD-MPC config
 name: tdmpc
-obs_dim: 0
-action_dim: 0
+state_keys:
+  - arm_qpos
+  - arm_qvel
+  - target_pos
+image_keys: []
+latent_dim: 64
 hidden_dim: 256
+state_embed_dim: 64
+image_embed_dim: 64
 batch_size: 256
 lr: 3.0e-4
+gamma: 0.99
+tau: 0.01
+replay_size: 100000
+start_steps: 1000
+train_freq: 1
+gradient_steps: 1
+policy_bc_weight: 1.0
+device: auto
+
+# Planning (CEM)
 horizon: 5
+cem_population: 256
+cem_elite: 32
+cem_iters: 3
+cem_init_std: 0.5
+cem_min_std: 0.05
+action_noise: 0.1
