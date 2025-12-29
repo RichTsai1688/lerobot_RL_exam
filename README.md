@@ -8,15 +8,17 @@
 # 1) 安裝依賴
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+PIP_CONSTRAINT= pip install -r requirements.txt
 
 # 2) 取得上游環境
 mkdir -p third_party
 cd third_party
-git clone https://github.com/xxx/Sim-LeRobotHackathon.git
+git clone https://github.com/perezjln/gym-lowcostrobot.git
 cd ..
 
-# 3) Smoke test
+# 3) Smoke test (無頭環境請用 EGL)
+export MUJOCO_GL=egl
+export XDG_CACHE_HOME="$(pwd)/.cache"
 python scripts/smoke_test_env.py --env-id PushCube-v0
 ```
 
@@ -43,6 +45,8 @@ python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/trai
 注意：
 - `scripts/train_pick.py` 目前是隨機策略的最小流程，之後需替換成 TD-MPC 整合。
 - 在 Colab/無頭環境建議設定 `MUJOCO_GL=egl` 以使用 GPU 渲染。
+- 若出現 Mesa shader cache 權限錯誤，請設定 `XDG_CACHE_HOME` 到可寫目錄。
+- 若安裝時遇到 pip constraint 衝突，請用 `PIP_CONSTRAINT=` 清空限制。
 
 ## Repo 結構
 

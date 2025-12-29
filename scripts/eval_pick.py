@@ -2,12 +2,19 @@ import argparse
 import base64
 import json
 import os
+import sys
 from typing import Any, Dict, Optional
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 import yaml
 from gymnasium.wrappers import RecordVideo
 
 from envs.lowcostrobot_pick import create_env
+from scripts.utils_cuda import print_cuda_diagnostics
+from scripts.utils_policy import create_gpu_policy, policy_action
 
 
 def _load_yaml(path: str) -> Dict[str, Any]:
@@ -54,6 +61,8 @@ def main() -> int:
     cfg = _load_yaml(args.config)
     env_cfg = _load_yaml(cfg["env_config"])
 
+    print_cuda_diagnostics(prefix="eval_cuda")
+
     try:
         with open(args.ckpt, "r", encoding="utf-8") as f:
             ckpt = json.load(f)
@@ -73,20 +82,22 @@ def main() -> int:
         env = RecordVideo(env, video_folder=args.record_dir, episode_trigger=lambda _: True)
 
     returns = []
-    for _ in range(args.episodes):
-        obs, _ = env.reset()
-        done = False
-        ep_return = 0.0
-        while not done:
-            if args.render:
-                env.render()
-            action = env.action_space.sample()
-            obs, reward, terminated, truncated, _ = env.step(action)
-            ep_return += float(reward)
-            done = terminated or truncated
-        returns.append(ep_return)
-
-    env.close()
+    try:
+        for _ in range(args.episodes):
+            obs, _ = env.reset()
+            policy = create_gpu_policy(obs, env.action_space)
+            done = False
+            ep_return = 0.0
+            while not done:
+                if args.render:
+                    env.render()
+                action = policy_action(policy, obs)
+                obs, reward, terminated, truncated, _ = env.step(action)
+                ep_return += float(reward)
+                done = terminated or truncated
+            returns.append(ep_return)
+    finally:
+        env.close()
 
     if args.inline:
         latest = _latest_mp4(args.record_dir)
