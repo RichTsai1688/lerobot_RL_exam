@@ -1,0 +1,22 @@
+env_id: PushCube-v0
+max_episode_steps: 200
+seed: 42
+
+# Placeholder for wrappers/reward settings
+reward:
+  w_reach: 1.0
+  w_grasp: 5.0
+  w_lift: 10.0
+  penalty_action: 0.01
+  penalty_vel: 0.001
+  penalty_time: 0.001
+
+termination:
+  success_on_lift: true
+  timeout: true
+
+randomization:
+  enabled: false
+  object_pos_range: [0.02, 0.02, 0.0]
+  mass_scale_range: [0.9, 1.1]
+  friction_scale_range: [0.8, 1.2]

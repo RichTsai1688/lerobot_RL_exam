@@ -1,0 +1,9 @@
+seed: 42
+steps: 2000
+eval_interval: 500
+checkpoint_interval: 500
+run_dir: logs
+checkpoint_dir: checkpoints
+
+env_config: configs/env/lowcostrobot_pick.yaml
+algo_config: configs/algo/tdmpc.yaml

@@ -1,0 +1,8 @@
+# Placeholder TD-MPC config
+name: tdmpc
+obs_dim: 0
+action_dim: 0
+hidden_dim: 256
+batch_size: 256
+lr: 3.0e-4
+horizon: 5
