@@ -78,6 +78,10 @@ def main() -> int:
                     f"episode {episode} return={ep_return:.4f} "
                     f"steps={ep_steps} time_s={elapsed:.3f} success={success_text}"
                 )
+                if (episode + 1) % checkpoint_interval == 0:
+                    ckpt_path = os.path.join(cfg.get("checkpoint_dir", "checkpoints"), "latest.json")
+                    _save_checkpoint(ckpt_path, {"episode": episode + 1, "note": "placeholder checkpoint"})
+                    print(f"checkpoint saved: {ckpt_path}")
                 obs, _ = env.reset()
                 ep_return = 0.0
                 ep_start = time.perf_counter()
@@ -88,10 +92,6 @@ def main() -> int:
             if step % eval_interval == 0:
                 print(f"step={step} (placeholder eval)")
 
-            if step % checkpoint_interval == 0:
-                ckpt_path = os.path.join(cfg.get("checkpoint_dir", "checkpoints"), "latest.json")
-                _save_checkpoint(ckpt_path, {"step": step, "note": "placeholder checkpoint"})
-                print(f"checkpoint saved: {ckpt_path}")
     finally:
         env.close()
     return 0
