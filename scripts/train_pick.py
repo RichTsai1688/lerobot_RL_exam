@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from typing import Any, Dict
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -55,17 +56,34 @@ def main() -> int:
         obs, _ = env.reset()
         policy = create_gpu_policy(obs, env.action_space)
         ep_return = 0.0
+        ep_start = time.perf_counter()
+        episode = 0
+        ep_steps = 0
+        success = None
         step = 0
 
         while step < total_steps:
             action = policy_action(policy, obs)
-            obs, reward, terminated, truncated, _ = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)
             ep_return += float(reward)
             step += 1
+            ep_steps += 1
+            if success is None:
+                success = info.get("success")
 
             if terminated or truncated:
+                elapsed = time.perf_counter() - ep_start
+                success_text = "n/a" if success is None else str(bool(success))
+                print(
+                    f"episode {episode} return={ep_return:.4f} "
+                    f"steps={ep_steps} time_s={elapsed:.3f} success={success_text}"
+                )
                 obs, _ = env.reset()
                 ep_return = 0.0
+                ep_start = time.perf_counter()
+                ep_steps = 0
+                success = None
+                episode += 1
 
             if step % eval_interval == 0:
                 print(f"step={step} (placeholder eval)")

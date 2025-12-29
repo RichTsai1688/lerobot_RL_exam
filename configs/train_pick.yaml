@@ -1,7 +1,7 @@
 seed: 42
 steps: 2000
 eval_interval: 500
-checkpoint_interval: 500
+checkpoint_interval: 50
 run_dir: logs
 checkpoint_dir: checkpoints
 

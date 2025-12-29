@@ -48,6 +48,41 @@ python scripts/eval_pick.py --ckpt checkpoints/latest.json --config configs/trai
 - 若出現 Mesa shader cache 權限錯誤，請設定 `XDG_CACHE_HOME` 到可寫目錄。
 - 若安裝時遇到 pip constraint 衝突，請用 `PIP_CONSTRAINT=` 清空限制。
 
+## 設定檔說明
+
+可選演算法與設定（目前僅 placeholder 範例）：
+
+| 類型 | 名稱 | 設定檔 | 說明 |
+| --- | --- | --- | --- |
+| algo | tdmpc | configs/algo/tdmpc.yaml | TD-MPC placeholder 設定 |
+| env | lowcostrobot_pick | configs/env/lowcostrobot_pick.yaml | Low-cost robot pick 環境設定 |
+
+`configs/train_pick.yaml`
+- `seed`: 隨機種子，控制可重現性
+- `steps`: 訓練總步數（目前是隨機 policy 的步數）
+- `eval_interval`: 每隔多少步印一次 eval 訊息（placeholder）
+- `checkpoint_interval`: 每隔多少步寫一次 checkpoint（目前為 50）
+- `run_dir`: 訓練記錄輸出資料夾
+- `checkpoint_dir`: checkpoint 輸出資料夾
+- `env_config`: 環境設定檔路徑
+- `algo_config`: 演算法設定檔路徑（目前是 placeholder）
+
+`configs/env/lowcostrobot_pick.yaml`
+- `env_id`: Gymnasium 環境 ID
+- `max_episode_steps`: 每回合最大步數（需要 wrapper 套用）
+- `seed`: 環境隨機種子
+- `reward.*`: reward 權重與懲罰（placeholder）
+- `termination.*`: 終止條件（placeholder）
+- `randomization.*`: domain randomization 設定
+
+`configs/algo/tdmpc.yaml`
+- `name`: 演算法名稱（placeholder）
+- `obs_dim`, `action_dim`: 觀測/動作維度（placeholder）
+- `hidden_dim`: 模型隱層大小（placeholder）
+- `batch_size`: 訓練 batch 大小（placeholder）
+- `lr`: 學習率（placeholder）
+- `horizon`: TD-MPC 規劃步數（placeholder）
+
 ## Repo 結構
 
 ```

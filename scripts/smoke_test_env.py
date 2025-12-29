@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import time
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:
@@ -31,12 +32,25 @@ def main() -> int:
         for ep in range(args.episodes):
             obs, _ = env.reset()
             policy = create_gpu_policy(obs, env.action_space)
+            ep_return = 0.0
+            start_time = time.perf_counter()
+            ep_steps = 0
+            success = None
             for _ in range(args.max_steps):
                 action = policy_action(policy, obs)
-                obs, reward, terminated, truncated, _ = env.step(action)
+                obs, reward, terminated, truncated, info = env.step(action)
+                ep_return += float(reward)
+                ep_steps += 1
+                if success is None:
+                    success = info.get("success")
                 if terminated or truncated:
                     break
-            print(f"episode {ep} ok")
+            elapsed = time.perf_counter() - start_time
+            success_text = "n/a" if success is None else str(bool(success))
+            print(
+                f"episode {ep} ok return={ep_return:.4f} "
+                f"steps={ep_steps} time_s={elapsed:.3f} success={success_text}"
+            )
     finally:
         env.close()
     return 0
